@@ -20,11 +20,11 @@ We've taught URL to deal with query parameters like a dictionary[^1]:
 url.parameters["query"] = "fondue"
 ```
 
-[^1]: Strictly speaking, URLs can have multiple parameters with the same name (e.g. `a=1&a=2`), and some server-side frameworks gather these into arrays. But in many real-life projects, we think of each parameter as uniquely-named. If this is your case, you might find it more convenient to treat query parameters as a dictionary.
+[^1]: Strictly speaking, URLs can have multiple parameters with the same name (e.g. `a=1&a=2`), and some server-side frameworks gather these into arrays. But in many real-life projects, we think of each parameter as uniquely-named. If this is also your case, you might find it more convenient to treat query parameters just like a dictionary.
 
 
 ## URL & URLRequest Modifiers
-Inspired by SwiftUI's extensive use of modifers, we've given a few to URL and URLRequest:
+Inspired by SwiftUI's extensive use of modifiers, we've given a few to URL and URLRequest:
 
 ```swift
 let base: URL = "https://server.domain/api"
@@ -35,11 +35,16 @@ let request = url.request(.post, path: "path")
 ```
 
 ## ObservableProcessor
-A convenient way to provide asynchronous data to a View. It publishes the output, busy state, and error states so that they can be bound to the View.
+A convenient way to provide asynchronous data to a View. It publishes the output, busy and error states so that they can be bound to a View.
 
 ```swift
 struct SomeView: View {
     @StateObject var model = ObservableProcessor { SomeAPI.get() }
-    :
+    
+    var body: some View {
+        List(model.output ?? []) { item in
+            :
+        }
+    }
 }
 ```
