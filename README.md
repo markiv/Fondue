@@ -34,6 +34,29 @@ let request = url.request(.post, path: "path")
     .adding(parameters: ["page": 1])
 ```
 
+### `URL.request()` and `URLRequest.publisher()`
+
+Getting a Combine publisher from `URLRequest` or `URL` couldn't be simpler: 
+
+```swift
+let base: URL = "https://api.foo.com/api/employees"
+
+func employee(id: String) -> AnyPublisher<Employee, Error> {
+    base.request(path: id).publisher()
+}
+```
+
+The new modifiers let you fluently set HTTP method, headers and automatic body encoding, for example: 
+
+```swift
+func createToken(email: String, password: String) -> AnyPublisher<TokenResponseBody, Error> {
+    base.request(.post, path: "UserProfiles/CreateToken")
+        .adding(header: "ApplicationToken", value: applicationToken)
+        .with(body: TokenRequestBody(email: email, password: password))
+        .publisher()
+}
+```
+
 ## ObservableProcessor
 A convenient way to provide asynchronous data to a View. It publishes the output, busy and error states so that they can be bound to a View.
 
