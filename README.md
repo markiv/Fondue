@@ -1,6 +1,6 @@
 ![Swift](https://github.com/markiv/Fondue/workflows/Swift/badge.svg)
 
-# Fondue
+# Fondue 🫕
 
 A library of delightfully light extensions to simplify working with SwiftUI and Combine in real-world apps.
 
