@@ -115,62 +115,70 @@ public extension URL {
 }
 
 #if canImport(Combine)
-    import Combine
+import Combine
 
-    @available(iOS 13.0, tvOS 13.0, OSX 10.15, macCatalyst 13.0, watchOS 6.0, *)
-    public extension URLRequest {
-        /// Creates a publisher for this request and decodable type.
-        ///
-        /// Example:
-        ///
-        ///     func employee(name: String) -> AnyPublisher<Employee, Error> {
-        ///         URL(string: "https://api.foo.com/employees")!
-        ///             .request(path: name).publisher()
-        ///     }
-        /// - Parameter session: Optional session. `URLSession.shared` is used by default.
-        /// - Parameter decoder: Optional decoder. `JSONDecoder.shared` is used by default.
-        /// - Returns: A publisher that wraps a data task and decoding for the URL request
-        ///
-        func publisher<T: Decodable>(
-            session: URLSession = .shared, decoder: JSONDecoder = .shared
-        ) -> AnyPublisher<T, Error> {
-            session.dataTaskPublisher(for: self)
-                .map(\.data)
-                .map { $0.dumpJson() }
-                .decode(type: T.self, decoder: decoder)
-                .handleEvents(receiveCompletion: { completion in
-                    if case let .failure(error) = completion {
-                        debugPrint(error)
-                    }
-                })
-                .eraseToAnyPublisher()
-        }
-
-        /// Publishes just the HTTP status of this request
-        func statusPublisher(
-            session: URLSession = .shared, decoder: JSONDecoder = .shared
-        ) -> AnyPublisher<Int?, Error> {
-            session.dataTaskPublisher(for: self)
-                .map { ($0.response as? HTTPURLResponse)?.statusCode }
-                .mapError { $0 as Error }
-                .eraseToAnyPublisher()
-        }
+@available(iOS 13.0, tvOS 13.0, OSX 10.15, macCatalyst 13.0, watchOS 6.0, *)
+public extension URLRequest {
+    /// Creates a publisher for this request and decodable type.
+    ///
+    /// Example:
+    ///
+    ///     func employee(name: String) -> AnyPublisher<Employee, Error> {
+    ///         URL(string: "https://api.foo.com/employees")!
+    ///             .request(path: name).publisher()
+    ///     }
+    /// - Parameter session: Optional session. `URLSession.shared` is used by default.
+    /// - Parameter decoder: Optional decoder. `JSONDecoder.shared` is used by default.
+    /// - Returns: A publisher that wraps a data task and decoding for the URL request
+    ///
+    func publisher<T: Decodable>(
+        session: URLSession = .shared, decoder: JSONDecoder = .shared
+    ) -> AnyPublisher<T, Error> {
+        session.dataTaskPublisher(for: self)
+            .tryMap { data, response -> JSONDecoder.Input in
+                if let httpResponse = response as? HTTPURLResponse,
+                   let statusCode = HTTPStatusCode(rawValue: httpResponse.statusCode), statusCode.isError
+                {
+                    throw statusCode
+                }
+                return data
+            }
+            .map { $0.dumpJson() }
+            .decode(type: T.self, decoder: decoder)
+            .handleEvents(receiveCompletion: { completion in
+                if case let .failure(error) = completion {
+                    debugPrint(error)
+                }
+            })
+            .eraseToAnyPublisher()
     }
 
-    extension Data {
-        @discardableResult func dumpJson(title: String? = nil) -> Self {
-            #if DEBUG
-                print("----- \(title ?? "JSON Dump") -----")
-                guard let object = try? JSONSerialization.jsonObject(with: self),
-                      let data = try? JSONSerialization.data(withJSONObject: object, options: .prettyPrinted),
-                      let json = String(data: data, encoding: .utf8)
-                else {
-                    print(String(data: self, encoding: .utf8) ?? "Unknown data encoding")
-                    return self
-                }
-                print(json)
-            #endif
+    /// Publishes just the HTTP status of this request
+    func statusPublisher(
+        session: URLSession = .shared, decoder: JSONDecoder = .shared
+    ) -> AnyPublisher<HTTPStatusCode?, Error> {
+        session.dataTaskPublisher(for: self)
+            .map { ($0.response as? HTTPURLResponse)?.statusCode ?? -1 }
+            .map(HTTPStatusCode.init)
+            .mapError { $0 as Error }
+            .eraseToAnyPublisher()
+    }
+}
+
+extension Data {
+    @discardableResult func dumpJson(title: String? = nil) -> Self {
+        #if DEBUG
+        print("----- \(title ?? "JSON Dump") -----")
+        guard let object = try? JSONSerialization.jsonObject(with: self),
+              let data = try? JSONSerialization.data(withJSONObject: object, options: .prettyPrinted),
+              let json = String(data: data, encoding: .utf8)
+        else {
+            print(String(data: self, encoding: .utf8) ?? "Unknown data encoding")
             return self
         }
+        print(json)
+        #endif
+        return self
     }
+}
 #endif
