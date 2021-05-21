@@ -121,9 +121,9 @@ import Combine
 public extension URLRequest {
     /// Wraps an HTTP error status code and a possibly decoded value
     struct ErrorWrapper: Error {
-        let data: Data?
-        let response: HTTPURLResponse?
-        let statusCode: HTTPStatusCode?
+        public let data: Data?
+        public let response: HTTPURLResponse?
+        public let statusCode: HTTPStatusCode?
     }
 
     /// Creates a publisher for this request and decodable type.
