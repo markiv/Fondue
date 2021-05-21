@@ -19,10 +19,10 @@ import Combine
 ///     }
 public class ObservableProcessor<Input, Output>: ObservableObject {
     @Published public var input: Input?
-    @Published public private(set) var output: Output?
-    @Published public private(set) var isBusy = false
-    @Published public private(set) var hasError = false
-    @Published public private(set) var error: Error? {
+    @Published public var output: Output?
+    @Published public var isBusy = false
+    @Published public var hasError = false
+    @Published public var error: Error? {
         didSet { hasError = error != nil }
     }
 
