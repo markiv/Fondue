@@ -120,9 +120,10 @@ import Combine
 @available(iOS 13.0, tvOS 13.0, OSX 10.15, macCatalyst 13.0, watchOS 6.0, *)
 public extension URLRequest {
     /// Wraps an HTTP error status code and a possibly decoded value
-    struct ErrorWrapper<T: Decodable>: Error {
+    struct ErrorWrapper: Error {
+        let data: Data?
+        let response: HTTPURLResponse?
         let statusCode: HTTPStatusCode?
-        let value: T?
     }
 
     /// Creates a publisher for this request and decodable type.
@@ -145,10 +146,7 @@ public extension URLRequest {
                 if let httpResponse = response as? HTTPURLResponse,
                    let statusCode = HTTPStatusCode(rawValue: httpResponse.statusCode), statusCode.isError
                 {
-                    throw ErrorWrapper(
-                        statusCode: statusCode,
-                        value: try? decoder.decode(T.self, from: data)
-                    )
+                    throw ErrorWrapper(data: data, response: httpResponse, statusCode: statusCode)
                 } else {
                     return data
                 }
