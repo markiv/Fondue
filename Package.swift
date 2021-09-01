@@ -5,14 +5,13 @@ import PackageDescription
 
 let package = Package(
     name: "Fondue",
-//    platforms: [.iOS(.v13)],
+    platforms: [.iOS(.v13), .macOS(.v10_15), .tvOS(.v13), .watchOS(.v6)],
     products: [
         // Products define the executables and libraries a package produces, and make them visible to other packages.
         .library(
             name: "Fondue",
             targets: ["Fondue"]
-        ),
-//        .executable(name: "Pepe", targets: ["Fondue"])
+        )
     ],
     dependencies: [
         // Dependencies declare other packages that this package depends on.
